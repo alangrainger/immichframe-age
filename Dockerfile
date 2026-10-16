@@ -1,13 +1,15 @@
 # ImmichFrame with the "show people age" patch (ungated version of upstream PR 681).
 # Only the frontend is rebuilt; the .NET API comes from the official image of the same version.
 #
+# VERSION is required and has no default here, so the VERSION file stays the single source of truth:
 #   podman build --build-arg VERSION=$(cat VERSION) -t immichframe-age .
-ARG VERSION=v1.0.39.0
+ARG VERSION
 
 # The frontend build output is platform-independent, so build it once on the host
 # architecture rather than once per target under emulation.
 FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS build-node
 ARG VERSION
+RUN test -n "$VERSION" || { echo "VERSION build arg is required, e.g. --build-arg VERSION=\$(cat VERSION)" >&2; exit 1; }
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 RUN git clone --depth 1 --branch ${VERSION} https://github.com/immichFrame/ImmichFrame.git .
